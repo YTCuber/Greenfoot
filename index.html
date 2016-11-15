@@ -1,0 +1,211 @@
+<div id="left"><div id="map"></div></div><div id="right"><textarea id="code" rows="50" cols="80">//Der Rover ist auf Position 0|0 und schaut nach links.</textarea><br>
+	<button onclick="codeUmwandeln();">Ausfuehren</button><br>
+	<button onclick="mapVeraendern();">Objekt platzieren</button><br>
+	<button onclick="map=predefined[1];drawMap();">S.50 Nr.3 Map</button>
+	<button onclick="map=predefined[0];drawMap();">S.50 Nr.4 Map</button>
+	<button onclick="map=predefined[2];drawMap();">S.51 Nr.5 Map</button><br>
+	<button onclick="loadCode(0);">S.49 Nr.1 Code</button>
+	<button onclick="loadCode(1);">S.49/50 Nr.2 Code</button>
+	<button onclick="loadCode(2);">S.50 Nr.4 Code</button>
+</div><style>#left{position:absolute;top:0;bottom:0;left:0;width:50%;}#right{position:absolute;top:0;bottom:0;right:0;width:50%;}</style><script>
+/*Code functions*/
+String.prototype.allReplace = function(obj) {
+	var retStr = this;
+	for (var x in obj) {
+		retStr = retStr.replace(new RegExp(x, 'g'), obj[x]);
+	}
+	return retStr;
+};
+function codeUmwandeln(cde){
+	cde=document.getElementById("code").value;
+	return eval(cde.allReplace({'int':'var','boolean':'var','string':'var','void':'var','public var':'function','codeumwandeln':'cduwnenoemadl'}));
+}
+/*Rover functions*/
+var map=[];
+for(var i=0;i<15;++i)map.push([0,0,0,0,0,0,0,0,"G",0,0,0,0,0,0]);
+var predefined=[
+	[[0,0,0,0,0,"M",0],[0,0,0,0,0,"M",0],[0,0,0,0,0,"M",0],["S","M","M","M","M","M","H"]],
+	[[0,0,"H",0,"H","H","H",0,"H",0,0],["S",0,"G","G","G",0,0,"G","G",0,"M"]],
+	[["S",0,"H",0,0,"H",0,"H",0,"G"]]
+];
+var roverpos=[0,0],roverdirection=3;
+function loadCode(id){
+	var c=[`
+//Teilaufgabe a
+//Der Rover faehrt, wenn er nicht auf einem Gestein steht. Sonst analysiert er es.
+if (!gesteinVorhanden()){
+	fahre();
+}else{
+	analysiereGestein();
+}
+
+//Teilaufgabe b
+//Der Rover faehrt um einen rechts liegenden Huegel, wenn dieser vorhanden ist. Sonst setzt er eine Marke.
+if (huegelVorhanden("rechts")){
+	fahre();
+	drehe("rechts");
+	fahre();
+	fahre();
+	drehe("rechts");
+	fahre();
+	fahre();
+	drehe("rechts");
+	fahre();
+	fahre();
+	drehe("rechts");
+}else{
+	setzeMarke();
+}
+
+//Teilaufgabe c
+//Der Rover faehrt, wenn ein Gestein auf seiner Position vorhanden ist.
+if(gesteinVorhanden()){
+	fahre();
+}else{
+}
+`,`
+//Teilaufgabe a:
+if(huegelVorhanden("rechts")){
+	drehe("rechts");
+}
+
+//Teilaufgabe b
+if(huegelVorhanden("rechts")){
+	drehe("rechts");
+}else if(huegelVorhanden("links")){
+	drehe("links");
+}else{
+	setzeMarke();
+}
+
+//Teilaufgabe c
+if(markeVorhanden()){
+	entferneMarke();
+}else{
+	setzeMarke();
+}
+`,`
+public void actions(){
+	while(markeVorhanden()){
+		if(huegelVorhanden("vorne")){
+			drehe("links");
+		}
+		fahre();
+	}
+}
+
+//Bringt den Rover auf Startposition
+public void setup(){
+	drehe("rechts");
+	drehe("rechts");
+	fahre();
+	fahre();
+	fahre();
+	drehe("links");
+	fahre();
+}
+
+window.setup=setup;
+window.actions=actions;
+
+//setup();
+//actions();
+
+/*Erklaerung:
+Solange er auf der Spur von Marken ist
+  Wenn ein Hügel vor ihm ist
+    Links abbiegen
+   Ende Wenn
+  Immer fahren
+Ende Solange
+*/
+`];
+	document.getElementById("code").value=c[id]||"//Could not load code";
+}
+function mapVeraendern(){
+	var zeile=prompt("Zeile",0),spalte=prompt("Spalte,0"),inhalt=prompt("Inhalt: G(Gestein),M(Marke),H(Huegel),0(nix)","M");
+	map[zeile][spalte]=inhalt;
+	drawMap();
+}
+//roverdirection: 3 oben
+function fahre(){
+	if(roverdirection==2){
+		roverpos[1]--;
+	}else if(roverdirection==1){
+		roverpos[0]++;
+	}else if(roverdirection==0){
+		roverpos[1]++;
+	}else if(roverdirection==3){
+		roverpos[0]--;
+	}
+	drawMap();
+	delay();
+}
+function drawMap(){
+	var text="<table>";
+	for(var i=0;i<map.length;++i){
+		text+="<tr>";
+		for(var j=0;j<map[i].length;++j){
+			if(i==roverpos[0]&&j==roverpos[1]){
+				text+="<td>Rover</td>";
+			}else{
+				text+="<td>"+convert(map[i][j])+"</td>";
+			}
+		}
+		text+="</tr>";
+	}
+	document.getElementById("map").innerHTML=text+"</table>";
+}
+function convert(cd){
+	switch (cd){
+		case 0:
+			return "<div style='background-color:#d6b55f;width:50px;height:50px;'>&nbsp;</div>";
+		case "H":
+			return "<div style='background-color:#d6b55f;width:50px;height:50px;'><img width='50' height='50' src='data:image/png;base64,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'/></div>";
+		case "G":
+			return "<div style='background-color:#d6b55f;width:50px;height:50px;'>Gestein</div>";
+		case "M":
+			return "<div style='background-color:#d6b55f;width:50px;height:50px;color:green;font-size:30pt;text-align:center'>X</div>";
+		case "S":
+			return "Start";
+		default:
+			return "---";
+			break;
+	}
+}
+function delay(){
+	for(var i=0;i<100000;++i)[].push([]);	
+}
+function analysiereGestein(){
+	alert("Gestein analysiert");
+}
+function gesteinVorhanden(){
+	return map[roverpos[0]][roverpos[1]]=="G";
+}
+function setzeMarke(){
+	map[roverpos[0]][roverpos[1]]="M";
+}
+function markeVorhanden(){
+	return map[roverpos[0]][roverpos[1]]=="M";
+}
+function drehe(direction){
+	if(direction=="links"){drehe("rechts");drehe("rechts");drehe("rechts");}
+	if(direction=="rechts")roverdirection++;
+	roverdirection=(roverdirection)%4;
+	delay();
+}
+function huegelVorhanden(direction){//hat noch keine direction
+	if(direction=="vorne")fahre();
+	if(direction=="links"){drehe("links");fahre();}
+	if(direction=="rechts"){drehe("rechts");fahre();}
+	var val=map[roverpos[0]][roverpos[1]]=="H";
+	if(direction=="links"){drehe("rechts");drehe("rechts");fahre();drehe("links");}
+	if(direction=="rechts"){drehe("rechts");drehe("rechts");fahre();drehe("rechts");drehe("rechts");drehe("links");}
+	if(direction=="vorne"){drehe("rechts");drehe("rechts");fahre();drehe("rechts");drehe("rechts");}
+	return val;
+}
+function init(){
+	drawMap();
+}
+init();
+</script>
